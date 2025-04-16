@@ -17,6 +17,7 @@ options:
   mqtt_username: null
   mqtt_password: null
   log_level: "info"
+  relay_data: true
   dns_refresh_frequency: 1440
 schema:
   mqtt_port: port
@@ -24,4 +25,5 @@ schema:
   mqtt_username: str
   mqtt_password: password
   log_level: list(fatal|error|warn|info|debug|trace)
+  relay_data: bool
   dns_refresh_frequency: int
