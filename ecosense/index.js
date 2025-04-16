@@ -33,30 +33,35 @@ const proxyRequest = async (request, response) => {
         }
     };
 
-    const proxied_request = https.request(`https://${await ECOSENSE_IP()}${request.originalUrl}`, options, (proxied_response) => {
-        LOGGER.trace({
-            message: "Proxying Response",
-            statusCode: proxied_response.statusCode,
-            headers: proxied_response.headers,
-        });
-        response.status(proxied_response.statusCode);
-        response.set(proxied_response.headers);
-    
-        proxied_response.on('data', (data) => {
-            LOGGER.trace({message: "Proxying Data", data: data.toString('utf8')});
-            response.end(data);
-        });
-    });
-    proxied_request.on('error', (error) => {
-        LOGGER.error({message: "Proxy Error", error});
-    });
-
-    if (request.method === 'PUT' && request.body) {
-        LOGGER.trace({message: "Proxying Body", data: JSON.stringify(request.body)});
+    if (!CONFIG.options.relay_data && request.method === 'PUT' && request.body) {
+        LOGGER.trace({message: "Swallowing Body", data: JSON.stringify(request.body)});
         await publish(request.body);
-        proxied_request.end(JSON.stringify(request.body));
     } else {
-        proxied_request.end();
+        const proxied_request = https.request(`https://${await ECOSENSE_IP()}${request.originalUrl}`, options, (proxied_response) => {
+            LOGGER.trace({
+                message: "Proxying Response",
+                statusCode: proxied_response.statusCode,
+                headers: proxied_response.headers,
+            });
+            response.status(proxied_response.statusCode);
+            response.set(proxied_response.headers);
+        
+            proxied_response.on('data', (data) => {
+                LOGGER.trace({message: "Proxying Data", data: data.toString('utf8')});
+                response.end(data);
+            });
+        });
+        proxied_request.on('error', (error) => {
+            LOGGER.error({message: "Proxy Error", error});
+        });
+    
+        if (request.method === 'PUT' && request.body) {
+            LOGGER.trace({message: "Proxying Body", data: JSON.stringify(request.body)});
+            await publish(request.body);
+            proxied_request.end(JSON.stringify(request.body));
+        } else {
+            proxied_request.end();
+        }
     }
 }
 app.use('/*', proxyRequest)
