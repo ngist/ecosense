@@ -29,6 +29,7 @@ If using Home Assistant you can do so with the following steps:
   password: YOUR-PASSWORD-HERE
 ```
 4. Ensure you set Mosquitto broker to Start on Boot and Enable Watchdog
+5. Set the relay_data option to forward the radon data to ecosense so you can use the ecosense app as well, or disable it so that data is not relayed to ecosense.
 
 #### Ecosense
 
